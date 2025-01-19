@@ -2,10 +2,10 @@ import uuid
 
 from peewee import Model, UUIDField, TextField, TimestampField
 
-from ..database import db
+from infrastructure.db.database import db
 
 #Model representa una tabla dentro de la base de datos. Cada instancia de la clase corresponde a una fila.
-class Auth(Model):
+class AuthEntity(Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)  # Identificador unico
     refresh_token = TextField(null=False)  # Almacena el Token de refresco
     user_id = UUIDField(null=False)  # id de usuario asociado al que pertenece el token.
