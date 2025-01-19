@@ -1,11 +1,16 @@
-from datetime import timedelta
 import hashlib
-from werkzeug.security import check_password_hash
-from flask_jwt_extended import create_access_token, create_refresh_token
-from domain.entities.user_entity import UserEntity
 
-
+#Generamos la firma con correo (identificador principal del usuario y password para permitir usuarios con mismo nombre.
+#Revisar com Marck.
 class AuthService:
     @staticmethod
-    def generate_sing():
+    def generate_sing(mail: str, password: str, ) -> str:
     #generacion de hash SAH 256 basado en username y password.
+        raw_string = f"{mail},{password}"
+        return hashlib.sha256(raw_string.encode()).hexdigest()
+
+    @staticmethod
+    def validate_sing(mail: str, password: str, sing: str) -> None:
+        expected_sing = AuthService.generate_sing(mail, password)
+        if sing != expected_sing:
+            raise ValueError("La firma no es valida")
