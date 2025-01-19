@@ -3,6 +3,7 @@ import uuid
 from peewee import UUIDField, Model, CharField
 from infrastructure.db.database import db
 
+#Esta clase se corresponde con el modelo de la base de datos
 
 class UserModel(Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
