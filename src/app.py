@@ -1,5 +1,5 @@
 from datetime import timedelta
-
+from flask_jwt_extended import JWTManager
 from flask import Flask, jsonify, request
 from flask_jwt_extended import create_access_token, create_refresh_token
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -12,6 +12,7 @@ def create_app():
     app = Flask(__name__)
     app.config["JWT_SECRET_KEY"] = "1234"
 
+    jwt = JWTManager(app)
 
     with app.app_context():
         db.connect()
@@ -70,7 +71,7 @@ def create_app():
             "token": acces_token,
             "refreshToken": refresh_token
 
-            })
+            }),200
 
 
     # REGISTER
