@@ -1,6 +1,6 @@
 import hashlib
 
-#Generamos la firma con correo (identificador principal del usuario y password para permitir usuarios con mismo nombre.
+#Generamos la firma con correo (identificador principal del usuario) y password para permitir usuarios con mismo nombre.
 #Revisar com Marck.
 class AuthService:
     @staticmethod
@@ -10,7 +10,7 @@ class AuthService:
         return hashlib.sha256(raw_string.encode()).hexdigest()#Genera hash en SAH 256
 
     @staticmethod
-    def validate_sing(mail: str, password: str, sing: str) -> None:
-        expected_sing = AuthService.generate_sing(mail, password)
-        if sing != expected_sing:
+    def validate_sign(mail: str, password: str, sign: str) -> None:
+        expected_sign = AuthService.generate_sing(mail, password)
+        if sign != expected_sign:
             raise ValueError("La firma no es valida")
