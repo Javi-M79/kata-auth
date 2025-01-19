@@ -1,6 +1,6 @@
 import hashlib
 
-#Generamos la firma con correo (identificador principal del usuario y password para permitir usuarios con mismo nombre.
+#Generamos la firma con correo (identificador principal del usuario) y password para permitir usuarios con mismo nombre.
 #Revisar com Marck.
 class AuthService:
     @staticmethod
