@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from infrastructure.db.database import db
 from infrastructure.db.models.auth import Auth
@@ -41,14 +41,16 @@ def create_app():
         # Busqueda del usuario en la base de datos.
         try:
             user = User.get(User.username == username)
-        except User.DoesNotExist:  # Correcto: usa la excepción específica del modelo User
+        except User.DoesNotExist:
             return jsonify({"error": "Usuario o contraseña incorrectos"}), 401
 
-            # Resouesta temporal para mostrar el usuario encontrado.
+        # Verificacion de contrasenya
+        if not check_password_hash(user.password, password):
+            return jsonify({"error": "Usuario o contraseña incorrectos."}), 401
 
-        # REGISTER
+        return jsonify({"message": "Contraseña verificada correctamente."}), 401
 
-
+    # REGISTER
     @app.route("/register", methods=['POST'])
     def register():
 
