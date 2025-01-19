@@ -4,8 +4,8 @@ from flask import Flask, jsonify, request
 from flask_jwt_extended import create_access_token, create_refresh_token
 from werkzeug.security import generate_password_hash, check_password_hash
 from infrastructure.db.database import db
-from infrastructure.db.models.auth import Auth
-from infrastructure.db.models.user import User
+from domain.entities.auth_entity import Auth
+from domain.entities.user_entity import User
 
 
 def create_app():
@@ -41,10 +41,11 @@ def create_app():
             return jsonify({"error": "El cuerpo de la solicitud debe ser un JSON valido."})
 
         username = data.get('username')
+        mail = data.get('mail')
         password = data.get('password')
 
         # Verificacion de datos
-        if not username or not password:
+        if not username or not mail or not password:
             return jsonify({"error": "Faltan credenciales."}), 400
 
         # Busqueda del usuario en la base de datos.
