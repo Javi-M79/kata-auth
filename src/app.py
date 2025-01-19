@@ -1,6 +1,8 @@
-from flask import Flask, jsonify, request
-from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import timedelta
 
+from flask import Flask, jsonify, request
+from flask_jwt_extended import create_access_token, create_refresh_token
+from werkzeug.security import generate_password_hash, check_password_hash
 from infrastructure.db.database import db
 from infrastructure.db.models.auth import Auth
 from infrastructure.db.models.user import User
@@ -8,6 +10,8 @@ from infrastructure.db.models.user import User
 
 def create_app():
     app = Flask(__name__)
+    app.config["JWT_SECRET_KEY"] = "1234"
+
 
     with app.app_context():
         db.connect()
@@ -31,6 +35,10 @@ def create_app():
     def login():
 
         data = request.get_json()
+
+        if not data:
+            return jsonify({"error": "El cuerpo de la solicitud debe ser un JSON valido."})
+
         username = data.get('username')
         password = data.get('password')
 
@@ -48,37 +56,45 @@ def create_app():
         if not check_password_hash(user.password, password):
             return jsonify({"error": "Usuario o contraseña incorrectos."}), 401
 
-        return jsonify({"message": "Contraseña verificada correctamente."}), 401
+    # Generacion de Tomen JWT y refresh Token
+        acces_token = create_access_token(identity=user.id, expires_delta=timedelta(days=2))
+        refresh_token = create_refresh_token(identity=user.id, expires_delta=timedelta(weeks=1))
+
+    # Devolver los tokens con datos de usuario
+        return jsonify({
+            "user": {
+                "username": user.username,
+                "person_id": user.id,
+             "activated": True
+             },
+            "token": acces_token,
+            "refreshToken": refresh_token
+
+            })
+
 
     # REGISTER
     @app.route("/register", methods=['POST'])
     def register():
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "El cuerpo de la solicitud debe ser un JSON válido."}), 400
 
-            data = request.get_json()
-            if not data:
-                return jsonify({"error:" "El cuerpo de la solicitud debe ser un JSON Valido"}), 400
+        username = data.get("username")
+        password = data.get("password")
 
-            username = data.get("username")
-            password = data.get("password")
+        if not username or not password:
+            return jsonify({"error": "Faltan campos obligatorios."}), 400
 
-            # Si no introduce los datos
-            if not username or not password:
-                return jsonify({"error": "Faltan campos obligatorios."}), 400
+        if User.select().where(User.username == username).exists():
+            return jsonify({"error": "El nombre de usuario ya está registrado"}), 409
 
-            # Verificacion de que el usuario existe:
-            if User.select().where(User.username == username).exists():
-                return jsonify({"error": "El nombre de usuario ya esta registrado"}), 409
+        hashed_password = generate_password_hash(password)
 
-            # Cifrado de contrasenya
-            hashed_password = generate_password_hash(password)
-
-            # Registrar nuevo usuario
-            user = User.create(username=username, password=hashed_password)
-            return jsonify({"message": f"Usuarion {user.username} registrado correctamente"}), 201
-
+        user = User.create(username=username, password=hashed_password)
+        return jsonify({"message": f"Usuario {user.username} registrado correctamente"}), 201
 
     return app
-
 
 if __name__ == '__main__':
     app = create_app()
