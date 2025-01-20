@@ -1,7 +1,9 @@
 import uuid
 
-from peewee import UUIDField, Model, CharField
+from peewee import Model, UUIDField, CharField
+
 from infrastructure.db.database import db
+
 
 #Esta clase se corresponde con el modelo de la base de datos
 
