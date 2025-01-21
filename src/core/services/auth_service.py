@@ -9,18 +9,20 @@ from infrastructure.db.models.auth_model import AuthModel
 #Generamos la firma con correo (identificador principal del usuario) y password para permitir usuarios con mismo nombre.
 #Revisar com Marck.
 class AuthService:
-
+#Generar firma a partir del mail y del password.
     @staticmethod
     def generate_sign(mail: str, password: str, ) -> str:
     #generacion de hash SAH 256 basado en username y password.
-        raw_string = f"{mail},{password}" #Concatena correo y contrasenya
+        raw_string = f"{mail.strip()},{password.strip()}" #Concatena correo y contrasenya. Quitamos espacios para ganar consistencia
         return hashlib.sha256(raw_string.encode()).hexdigest()#Genera hash en SAH 256
 
+#Validacion de firma con los parametros recogidos en el login
     @staticmethod
     def validate_sign(mail: str, password: str, sign: str) -> None:
-        expected_sign = AuthService.generate_sign(mail, password)
+        expected_sign = AuthService.generate_sign(mail.strip(), password.strip())
+        print(f"f Firma esperada: {expected_sign}")
         if sign != expected_sign:
-            raise ValueError("La firma no es valida")
+            raise ValueError("La firma no es valida.")
 
     # Generacion de Token JWT y refresh Token
     @staticmethod
