@@ -1,6 +1,5 @@
 import hashlib
 from datetime import timedelta, datetime
-
 from flask_jwt_extended import create_access_token, create_refresh_token
 from peewee import DoesNotExist
 
@@ -10,6 +9,7 @@ from infrastructure.db.models.auth_model import AuthModel
 #Generamos la firma con correo (identificador principal del usuario) y password para permitir usuarios con mismo nombre.
 #Revisar com Marck.
 class AuthService:
+
     @staticmethod
     def generate_sign(mail: str, password: str, ) -> str:
     #generacion de hash SAH 256 basado en username y password.
@@ -27,8 +27,7 @@ class AuthService:
     def generate_tokens(user_id:str)->dict:
         access_token = create_access_token(identity=user_id, expires_delta=timedelta(days=2))
         refresh_token = create_refresh_token(identity=user_id, expires_delta=timedelta(weeks=1))
-        # Devolver los tokens con datos de usuario
-
+        # Devolvemos tokens generados
         return{
             "access_token": access_token,
             "refresh_token": refresh_token
