@@ -29,14 +29,13 @@ def create_app():
         if db.is_closed():
             db.connect()
 
-    # /PING
+    # /PING. ENDPOINT DE PARA PROBAR CONEXION
     @app.route('/ping', methods=['GET'])
     def ping():
         # Endpoint para probar la conexion al servidor
         return jsonify({"message": "Servidor conectado correctamente"}), 200
 
-
-    # /LOGIN
+    # /LOGIN ENDPOINT PARA EL LOGIN DE USUARIO
     @app.route('/login', methods=['POST'])
     def login():
         try:
@@ -52,16 +51,19 @@ def create_app():
                 sign=data.get("sign")
             )
 
-            # Validacion de la firma con los datos recuperados en login_data.
+            # Validacion de la firma con los datos recuperados en login_data. Validamos la firma antes para no exponer
+            # errores especificos como contrasenya incorrecta. Por eso la verificamos después.
             AuthService.validate_sign(login_data.mail, login_data.password, login_data.sign, )
 
-            # Busqueda del usuario en la base de datos (Compara el 'UserModel' de la BD con el usuario logeado 'login_data')
+            # Busqueda del usuario en la base de datos (Compara el 'UserModel' de la BD con el usuario logueado 'login_data')
             user = UserModel.get(UserModel.mail == login_data.mail)
             # Verificacion de contrasenya
             if not check_password_hash(user.password, login_data.password):
                 return jsonify({"error": "Usuario o contraseña incorrectos."}), 401
-                # Generar tokens
+            # Generar tokens
             tokens = AuthService.generate_tokens(user.id)
+            #Guardar los tokens en la base de datos.
+            AuthService.store_refresh_token(user.id, tokens["refresh_token"])
 
             return jsonify({
                 "user": {
@@ -79,7 +81,7 @@ def create_app():
         except UserModel.DoesNotExist:
             return jsonify({"error": "Usuario o contraseña incorrectos."}), 401
 
-    # /REGISTER
+    # /REGISTER ENDPOINT PARA REGISTRO DE USUARIO
     @app.route("/register", methods=['POST'])
     def register():
 
@@ -107,36 +109,64 @@ def create_app():
         except Exception as e:
             return jsonify({"error": str(e)}), 400
 
-
-    # /AUTH
+    # /AUTH ENDPOINT DE AUTENTICACION.
     @app.route("/auth", methods=['POST'])
     @jwt_required()
     def auth():
-
         try:
             user_id = get_jwt_identity()
             return jsonify({"message": f"Token valido, user_id = {user_id}"}), 200
         except Exception as e:
             return jsonify({"error": "Token invalido"}), 400
 
-    # / REFRESH
+    # / REFRESH ENDPOITN DE GENERACION DE NUEVO TOKEN DE REFRESCO
     @app.route('/refresh', methods=['POST'])
     @jwt_required(refresh=True)
     def refresh():
-        data = request.get_json()
-        if not data or "refreshToken" not in data:
-            return jsonify({"error": "Falta el token de refresco"}), 400
-        refresh_token = data["refreshToken"]
 
         try:
-            token = AuthService.verify_refresh_token(refresh_token)
-            new_tokens = AuthService.generate_tokens(token.user_id.id)
+            #Obtenemnos el id del usuario desde el token
+            user_id = get_jwt_identity()
+
+            #Buscamos el token en la base de datos
+
+            token = AuthModel.get(AuthModel.user_id == user_id)
+            print(f"Token encontrado en la base de datos: {token.refresh_token}")
+
+            #Validamos que no haya caducado
+            if token.expired_date <datetime.utcnow():
+                return jsonify({"error": "El token ha caducado."}), 401
+
+            #Generar nuevos tokens
+            new_tokens = AuthService.generate_tokens(user_id)
+            print(f"Nuevos tokens generados: {new_tokens}")
+
+            #Actualizacion de fecha de uso.
             token.update_date = datetime.utcnow()
             token.save()
 
             return jsonify(new_tokens), 200
-        except Exception as e:
-            return jsonify({"error": str(e)}), 401
+        except AuthModel.DoesNotExist:
+            return jsonify({"error": "El token no existe."}), 401
+
+    # /USER. ENDOPOINT QUE MUESTRA LA LISTA DE USUARIOS REGISTRADOS
+    @app.route('/users', methods=['GET'])
+    def list_user():
+        users = UserModel.select()  # RFEcupera todos los usuarios
+        users_list = []  # Lista donde guardaremos todos los usuarios
+        # Recorremos los usuarios de la base de datos
+
+        for user in users:
+            # Anyadimos los usuarios a la lista
+            users_list.append({
+                "id": str(user.id),  # Casteamos al ser un UUID
+                "Username": (user.username),
+                "Mail": (user.mail)
+
+            })
+
+            # Devolvemos la lista en formato JSON
+        return jsonify({"Users": users_list}), 200
 
     return app
 
