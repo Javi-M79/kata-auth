@@ -1,7 +1,5 @@
 import uuid
-
 from peewee import Model, UUIDField, CharField
-
 from infrastructure.db.database import db
 
 
