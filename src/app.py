@@ -1,10 +1,13 @@
-from datetime import datetime
 import os
+from datetime import datetime
+
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required
+from pyexpat.errors import messages
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from core.exceptions.mail_format_exception import MailFormatException
 from core.services.auth_service import AuthService
 from domain.ports.inbound_dto.login_dto import LoginDTO
 from domain.ports.inbound_dto.register_dto import RegisterDTO
@@ -47,6 +50,11 @@ def create_app():
             if not data:
                 return jsonify({"error": "El cuerpo de la solicitud debe ser un JSON valido."}), 400
 
+            # TODO PRUEBA MailFormatException. Pendiente de mejorar codigo. Prueba inicial en postman OK.
+            # Comprobamos que el formato del correo electronico enviado en el cuerpo del JSON  es correcto.
+            mail = data.get("mail")
+            MailFormatException.validate_mail_format(mail)
+            # Si el correo es correcto, creamos una instacia del DTO.
             # Crear instancia de loginDTO
             login_data = LoginDTO(
                 mail=data.get("mail"),
