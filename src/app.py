@@ -1,5 +1,6 @@
 from datetime import datetime
-
+import os
+from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -13,8 +14,10 @@ from infrastructure.db.models.user_model import UserModel
 
 
 def create_app():
+
+    load_dotenv()
     app = Flask(__name__)
-    app.config["JWT_SECRET_KEY"] = "1234"
+    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 
     jwt = JWTManager(app)
 
