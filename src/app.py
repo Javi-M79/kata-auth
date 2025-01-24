@@ -4,10 +4,12 @@ from datetime import datetime
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required
-from pyexpat.errors import messages
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from core.exceptions.mail_format_exception import MailFormatException
+from core.exceptions.invalid_json_format_exception import InvalidJsonFormatException
+from core.exceptions.invalid_password_exception import InvalidPasswordException
+from core.exceptions.mail_format_exception import MailFormatException, validate_mail_format
+from core.exceptions.user_not_found_exception import search_user
 from core.services.auth_service import AuthService
 from domain.ports.inbound_dto.login_dto import LoginDTO
 from domain.ports.inbound_dto.register_dto import RegisterDTO
@@ -45,15 +47,15 @@ def create_app():
     @app.route('/login', methods=['POST'])
     def login():
         try:
-
             data = request.get_json()
             if not data:
-                return jsonify({"error": "El cuerpo de la solicitud debe ser un JSON valido."}), 400
+                # Ex
+                raise InvalidJsonFormatException
 
-            # TODO PRUEBA MailFormatException. Pendiente de mejorar codigo. Prueba inicial en postman OK.
-            # Comprobamos que el formato del correo electronico enviado en el cuerpo del JSON  es correcto.
+            # MailFormatException. Pendiente de mejorar codigo. Prueba inicial en postman OK.
             mail = data.get("mail")
-            MailFormatException.validate_mail_format(mail)
+            # Comprobamos que el formato del correo electronico enviado en el cuerpo del JSON  es correcto.
+            validate_mail_format(mail)
             # Si el correo es correcto, creamos una instacia del DTO.
             # Crear instancia de loginDTO
             login_data = LoginDTO(
@@ -66,11 +68,16 @@ def create_app():
             # errores especificos como contrasenya incorrecta. Por eso la verificamos después.
             AuthService.validate_sign(login_data.mail, login_data.password, login_data.sign, )
 
-            # Busqueda del usuario en la base de datos (Compara el 'UserModel' de la BD con el usuario logueado 'login_data')
-            user = UserModel.get(UserModel.mail == login_data.mail)
-            # Verificacion de contrasenya
+            # Busqueda del usuario en la base de datos (Compara el 'UserModel' de la BD con el usuario logueado 'login_data').
+            # Si no lo encuentra lanza una expcecion. Debemos ir al registro.
+            # Comprobacion de existencia del usuario en la base de datos. search_user devuelve el usuario si esta en la BD.
+            user = search_user(login_data)
+
+            #Si el usuario existe nos lo devuelve con los parametros correctos y verificamos la contrasenya.
+            # Verificacion de contrasenya. Si es incorrecta lanza una excepcion.
             if not check_password_hash(user.password, login_data.password):
-                return jsonify({"error": "Usuario o contraseña incorrectos."}), 401
+                raise InvalidPasswordException
+
             # Generar tokens
             tokens = AuthService.generate_tokens(user.id)
             #Guardar los tokens en la base de datos.
@@ -86,11 +93,14 @@ def create_app():
                 "refresh_token": tokens["refresh_token"]
             }), 200
 
-        except ValueError as e:
+        except InvalidJsonFormatException as e:
+            return jsonify({"error": str(e)}), 400
+        except MailFormatException as e:
+            return jsonify({"error": str(e)}), 400
+        except InvalidPasswordException as e:
             return jsonify({"error": str(e)}), 401
-
-        except UserModel.DoesNotExist:
-            return jsonify({"error": "Usuario o contraseña incorrectos."}), 401
+        except Exception as e:
+            return jsonify({"error": "Ha ocurrido un inesperado. Intentelo mas tarde."}, str(e))
 
     # /REGISTER ENDPOINT PARA REGISTRO DE USUARIO
     @app.route("/register", methods=['POST'])
@@ -105,11 +115,15 @@ def create_app():
             register_data = RegisterDTO(username=data.get("username"),
                                         mail=data.get("mail"),
                                         password=data.get("password"))
+
+            # Comprobamos que el formato del correo electronico enviado en el cuerpo del JSON  es correcto.
+            validate_mail_format(register_data.mail)
+
             # Comprobacion de que el usuario no existe en la base de datos.
             if UserModel.select().where(UserModel.mail == register_data.mail).exists():
                 return jsonify({"error": "El usuario ya está registrado."}), 409
 
-            # Si le usuario no existe procedemos al cifrado de contrasenya.
+            # Si el usuario no existe procedemos al cifrado de contrasenya.
             hashed_password = generate_password_hash(register_data.password)
 
             # Creamos el usuario en la base de datos (UserModel) a partir del register_data.
@@ -117,6 +131,8 @@ def create_app():
                                     mail=register_data.mail,
                                     password=hashed_password)
             return jsonify({"message": f"Usuario {user.username} registrado correctamente."}), 201
+        except MailFormatException as e:
+            return jsonify({"error": str(e)}), 400
         except Exception as e:
             return jsonify({"error": str(e)}), 400
 
