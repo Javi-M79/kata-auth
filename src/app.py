@@ -102,7 +102,7 @@ def create_app():
         except Exception as e:
             return jsonify({"error": "Ha ocurrido un inesperado. Intentelo mas tarde."}, str(e))
 
-    # /REGISTER ENDPOINT PARA REGISTRO DE USUARIO
+    # /REGISTER ENDPOINT PARA REGISTRO DE USUARIO. TODO IMPLEMENTAR EXCEPCIONES EN REGISTER
     @app.route("/register", methods=['POST'])
     def register():
 
