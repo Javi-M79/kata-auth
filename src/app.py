@@ -49,12 +49,11 @@ def create_app():
         try:
             data = request.get_json()
             if not data:
-                # Ex
                 raise InvalidJsonFormatException
 
-            # MailFormatException. Pendiente de mejorar codigo. Prueba inicial en postman OK.
+            # MailFormatException. Prueba inicial en postman OK.
             mail = data.get("mail")
-            # Comprobamos que el formato del correo electronico enviado en el cuerpo del JSON  es correcto.
+            # Comprobamos que el formato del correo electronico enviado en el cuerpo del JSON es correcto.
             validate_mail_format(mail)
             # Si el correo es correcto, creamos una instacia del DTO.
             # Crear instancia de loginDTO
@@ -70,7 +69,7 @@ def create_app():
 
             # Busqueda del usuario en la base de datos (Compara el 'UserModel' de la BD con el usuario logueado 'login_data').
             # Si no lo encuentra lanza una expcecion. Debemos ir al registro.
-            # Comprobacion de existencia del usuario en la base de datos. search_user devuelve el usuario si esta en la BD.
+            # search_user devuelve el usuario si esta en la BD.
             user = search_user(login_data)
 
             #Si el usuario existe nos lo devuelve con los parametros correctos y verificamos la contrasenya.
@@ -100,7 +99,7 @@ def create_app():
         except InvalidPasswordException as e:
             return jsonify({"error": str(e)}), 401
         except Exception as e:
-            return jsonify({"error": "Ha ocurrido un inesperado. Intentelo mas tarde."}, str(e))
+            return jsonify({"error": "Ha ocurrido un inesperado. Intentelo mas tarde."}, str(e)), 500
 
     # /REGISTER ENDPOINT PARA REGISTRO DE USUARIO. TODO IMPLEMENTAR EXCEPCIONES EN REGISTER
     @app.route("/register", methods=['POST'])
@@ -109,7 +108,7 @@ def create_app():
         try:
             data = request.get_json()
             if not data:
-                return jsonify({"error": "El cuerpo de la solicitud debe ser un JSON válido."}), 400
+                raise InvalidJsonFormatException
 
             # Creacion de una instancia de RegisterDTO. Recoge los datos introducidos por el usuario.
             register_data = RegisterDTO(username=data.get("username"),
@@ -131,6 +130,9 @@ def create_app():
                                     mail=register_data.mail,
                                     password=hashed_password)
             return jsonify({"message": f"Usuario {user.username} registrado correctamente."}), 201
+
+        except InvalidJsonFormatException as e:
+            return jsonify({"error": str(e)}), 400
         except MailFormatException as e:
             return jsonify({"error": str(e)}), 400
         except Exception as e:
