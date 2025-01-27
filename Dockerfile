@@ -1,41 +1,20 @@
+# Imagen base de Python
+FROM python:3.9-slim
 
-#Imagen de python
-
-#Imagen de python
-FROM python:3.12-slim
-
-#Directorio de trabajo
+# Directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-#Copia archivos necesarios al contenedor
+# Copiar solo las dependencias primero para optimizar el uso de caché de Docker
 COPY requirements.txt requirements.txt
 
-
-#Instalacion de dependencias
+# Instalar las dependencias
 RUN pip install --no-cache-dir -r requirements.txt
 
-#Copia todos los archivos del proyecto al contenedor
+# Copiar todos los archivos del proyecto al contenedor
 COPY . .
 
-#Expone el puerto 5000 para Flask
+# Exponer el puerto 5000 para la aplicación Flask
 EXPOSE 5000
 
-#Comando para ejecutar la aplicacion
-CMD ["python","app.py"]
-
-#Directorio de trabajo
-WORKDIR /app
-
-#Copia archivos necesarios al contenedor
-COPY requeriments.txt requeriments.txt
-COPY . .
-
-#Instalacion de dependencias
-RUN pip install --no-cache-dir -r requirements.txt
-
-#Expone el puerto 5000 para Flask
-EXPOSE 5000
-
-#Comando para ejecutar la aplicacion
-CMD ["python","app.py"]
-
+# Comando para ejecutar la aplicación
+CMD ["python", "src/app.py"]
