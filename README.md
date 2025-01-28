@@ -35,7 +35,7 @@ Crear un archivo.env en la raiz del proyecto con la siguiente configuracion:
      
 ## Puesta en marcha
 
-- Construir la image del docker.
+- Construir la imagen del docker.
 ```aiignore
 docker build
 ```
