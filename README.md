@@ -58,7 +58,7 @@ cbaaf6849f4d   kata-auth-app   "python src/app.py"      3 hours ago    Up 3 hour
 ```aiignore
 hhttp://localhost:5000/ping
 ```
-- Respuesta endpoint /ping.
+- Respuesta endpoint /ping.     
 ```aiignore
 {
   "message": "Servidor conectado correctamente"
