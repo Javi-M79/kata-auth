@@ -31,4 +31,40 @@ Crear un archivo.env en la raiz del proyecto con la siguiente configuracion:
 
      # Clave secreta JWT
      JWT_SECRET_KEY=supersecretkey
-     ```
+ ```     
+     
+## Puesta en marcha
+
+- Construir la image del docker
+```aiignore
+docker build
+```
+- Iniciar los contenedores
+```aiignore
+docker compose up -d
+```
+- Verificar que los servicios están corriendo
+```
+docker ps
+```
+- Aparecera por consola algo similar a esto:
+```aiignore
+CONTAINER ID   IMAGE           COMMAND                  CREATED        STATUS       PORTS                    NAMES
+cbaaf6849f4d   kata-auth-app   "python src/app.py"      3 hours ago    Up 3 hours   0.0.0.0:5000->5000/tcp   kata_auth_app
+9b9cf2026ef3   postgres        "docker-entrypoint.s…"   14 hours ago   Up 3 hours   0.0.0.0:6001->5432/tcp   kata_auth_service
+
+```
+- Probar endopints
+```aiignore
+hhttp://localhost:5000/ping
+```
+- Respuesta endpoint /ping
+```aiignore
+{
+  "message": "Servidor conectado correctamente"
+}
+```
+
+
+
+
