@@ -27,7 +27,7 @@ Crear un archivo.env en la raiz del proyecto con la siguiente configuracion:
      DB_USER=postgres
      DB_PASSWORD=postgres_password
      DB_HOST=db //Para lanzar con Docker. Cambiar a "localhost" para pruebas en local.
-     DB_PORT=5432 //Cambiar puerto para evitar confilctos con la instalacion de postgresql en la maquina
+     DB_PORT=5432 //Cambiar puerto si es necesario para evitar confilctos con la instalacion de postgresql en la maquina local.
 
      # Clave secreta JWT
      JWT_SECRET_KEY=supersecretkey
