@@ -43,7 +43,44 @@ def create_app():
         # Endpoint para probar la conexion al servidor
         return jsonify({"message": "Servidor conectado correctamente"}), 200
 
-    # /LOGIN ENDPOINT PARA EL LOGIN DE USUARIO
+    # /REGISTER ENDPOINT PARA REGISTRO DE USUARIO.
+    @app.route("/register", methods=['POST'])
+    def register():
+
+        try:
+            data = request.get_json()
+            if not data:
+                raise InvalidJsonFormatException
+
+            # Creacion de una instancia de RegisterDTO. Recoge los datos introducidos por el usuario.
+            register_data = RegisterDTO(username=data.get("username"),
+                                        mail=data.get("mail"),
+                                        password=data.get("password"))
+
+            # Comprobamos que el formato del correo electronico enviado en el cuerpo del JSON  es correcto.
+            validate_mail_format(register_data.mail)
+
+            # Comprobacion de que el usuario no existe en la base de datos.
+            if UserModel.select().where(UserModel.mail == register_data.mail).exists():
+                return jsonify({"error": "El usuario ya está registrado."}), 409
+
+            # Si el usuario no existe procedemos al cifrado de contrasenya.
+            hashed_password = generate_password_hash(register_data.password)
+
+            # Creamos el usuario en la base de datos (UserModel) a partir del register_data.
+            user = UserModel.create(username=register_data.username,
+                                    mail=register_data.mail,
+                                    password=hashed_password)
+            return jsonify({"message": f"Usuario {user.username} registrado correctamente."}), 201
+
+        except InvalidJsonFormatException as e:
+            return jsonify({"error": str(e)}), 400
+        except MailFormatException as e:
+            return jsonify({"error": str(e)}), 400
+        except Exception as e:
+            return jsonify({"error": str(e)}), 400
+
+    # /LOGIN ENDPOINT PARA EL LOGIN DE USUARIO.
     @app.route('/login', methods=['POST'])
     def login():
         try:
@@ -56,7 +93,7 @@ def create_app():
             # Comprobamos que el formato del correo electronico enviado en el cuerpo del JSON es correcto.
             validate_mail_format(mail)
             # Si el correo es correcto, creamos una instacia del DTO.
-            # Crear instancia de loginDTO
+            # Crear instancia de loginDTO.
             login_data = LoginDTO(
                 mail=data.get("mail"),
                 password=data.get("password"),
@@ -100,43 +137,6 @@ def create_app():
             return jsonify({"error": str(e)}), 401
         except Exception as e:
             return jsonify({"error": "Ha ocurrido un inesperado. Intentelo mas tarde."}, str(e)), 500
-
-    # /REGISTER ENDPOINT PARA REGISTRO DE USUARIO. TODO IMPLEMENTAR EXCEPCIONES EN REGISTER
-    @app.route("/register", methods=['POST'])
-    def register():
-
-        try:
-            data = request.get_json()
-            if not data:
-                raise InvalidJsonFormatException
-
-            # Creacion de una instancia de RegisterDTO. Recoge los datos introducidos por el usuario.
-            register_data = RegisterDTO(username=data.get("username"),
-                                        mail=data.get("mail"),
-                                        password=data.get("password"))
-
-            # Comprobamos que el formato del correo electronico enviado en el cuerpo del JSON  es correcto.
-            validate_mail_format(register_data.mail)
-
-            # Comprobacion de que el usuario no existe en la base de datos.
-            if UserModel.select().where(UserModel.mail == register_data.mail).exists():
-                return jsonify({"error": "El usuario ya está registrado."}), 409
-
-            # Si el usuario no existe procedemos al cifrado de contrasenya.
-            hashed_password = generate_password_hash(register_data.password)
-
-            # Creamos el usuario en la base de datos (UserModel) a partir del register_data.
-            user = UserModel.create(username=register_data.username,
-                                    mail=register_data.mail,
-                                    password=hashed_password)
-            return jsonify({"message": f"Usuario {user.username} registrado correctamente."}), 201
-
-        except InvalidJsonFormatException as e:
-            return jsonify({"error": str(e)}), 400
-        except MailFormatException as e:
-            return jsonify({"error": str(e)}), 400
-        except Exception as e:
-            return jsonify({"error": str(e)}), 400
 
     # /AUTH ENDPOINT DE AUTENTICACION.
     @app.route("/auth", methods=['POST'])

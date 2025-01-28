@@ -9,6 +9,7 @@ from infrastructure.db.models.auth_model import AuthModel
 #Generamos la firma con correo (identificador principal del usuario) y password para permitir usuarios con mismo nombre.
 #Revisar com Marck.
 class AuthService:
+
 #Generar firma a partir del mail y del password.
     @staticmethod
     def generate_sign(mail: str, password: str, ) -> str:
