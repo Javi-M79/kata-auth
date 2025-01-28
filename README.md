@@ -35,15 +35,15 @@ Crear un archivo.env en la raiz del proyecto con la siguiente configuracion:
      
 ## Puesta en marcha
 
-- Construir la image del docker
+- Construir la image del docker.
 ```aiignore
 docker build
 ```
-- Iniciar los contenedores
+- Iniciar los contenedores.
 ```aiignore
 docker compose up -d
 ```
-- Verificar que los servicios están corriendo
+- Verificar que los servicios están corriendo.
 ```
 docker ps
 ```
@@ -54,11 +54,11 @@ cbaaf6849f4d   kata-auth-app   "python src/app.py"      3 hours ago    Up 3 hour
 9b9cf2026ef3   postgres        "docker-entrypoint.s…"   14 hours ago   Up 3 hours   0.0.0.0:6001->5432/tcp   kata_auth_service
 
 ```
-- Probar endopints
+- Introducir la siguiente direccion en el navegador o en Postman.
 ```aiignore
 hhttp://localhost:5000/ping
 ```
-- Respuesta endpoint /ping
+- Respuesta endpoint /ping.
 ```aiignore
 {
   "message": "Servidor conectado correctamente"
